@@ -1,6 +1,7 @@
 import User from "../models/UserModel.js";
 import createToken from "../utils/jwt.js";
 import { compare } from "bcrypt";
+import { renameSync, unlinkSync } from "fs";
 
 export const signup = async (request, response, next) => {
     try {
@@ -69,3 +70,97 @@ export const login = async (request, response, next) => {
     }
 };
 
+export const getUserInfo = async (request, response, next) => {
+    try {
+        const userData = await User.findById(request.userId);
+        if(!userData) {
+            return response.status(404).send("User not found");
+        }
+        return response.status(200).json({
+            id: userData.id,
+            email: userData.email,
+            profileSetups: userData.profileSetups,
+            firstName: userData.firstName,
+            lastName: userData.lastName,
+            image: userData.image,
+            color: userData.color,
+        });
+    }
+    catch (error) {
+        console.log(error.message);
+        return response.status(500).send("Internal Server Error Occured");
+    }
+};
+
+export const updateProfile = async (request, response, next) => {
+    try {
+        const { userId } = request;
+        const { firstName, lastName, color } = request.body;
+        if(!firstName || !lastName) {
+            return response.status(400).send("FirstName, LastName are required");
+        }
+        const userData = await User.findByIdAndUpdate(userId, {firstName, lastName, color, profileSetups:true}, {new: true, runValidators: true});
+        return response.status(200).json({
+            id: userData.id,
+            email: userData.email,
+            profileSetups: userData.profileSetups,
+            firstName: userData.firstName,
+            lastName: userData.lastName,
+            image: userData.image,
+            color: userData.color,
+        });
+    }
+    catch (error) {
+        console.log(error.message);
+        return response.status(500).send("Internal Server Error Occured");
+    }
+};
+
+export const addProfileImage = async (request, response, next) => {
+    try {
+        if(!request.file) {
+            return response.status(400).send("File is required.");
+        }
+
+        const date = Date.now();
+        let fileName = "uploads/profiles/" + date + request.file.originalname;
+        renameSync(request.file.path, fileName);
+
+        const updatedUser = await User.findByIdAndUpdate(request.userId,
+        {image: fileName},
+        {new: true, runValidators: true}
+        );
+
+        return response.status(200).json({
+            image : updatedUser.image,
+        });
+    }
+    catch (error) {
+        console.log(error.message);
+        return response.status(500).send("Internal Server Error Occured");
+    }
+};
+
+export const removeProfileImage = async (request, response, next) => {
+    try {
+        const { userId } = request;
+        const user = await User.findById(userId);
+
+        if(!user) {
+            return response.status(404).send("User not found");
+        }
+        
+        if(user.image) {
+            unlinkSync(user.image);
+        }
+
+        user.image = null;  
+        await user.save();
+
+        return response.status(200).send("Profile image removed successfully");
+    }
+    catch (error) {
+        console.log(error.message);
+        return response.status(500).send("Internal Server Error Occured");
+    }
+};

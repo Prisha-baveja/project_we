@@ -31,77 +31,74 @@ const ParticlesComponent = (props) => {
   };
 
 
-  const options = useMemo(
-    () => ({
-      background: {
-        color: {
-          value: "#000000",
-        },
+  const options = useMemo(() => ({
+    background: {
+      color: {
+        value: "transparent", // background color
       },
-      fpsLimit: 360,
-      interactivity: {
-        events: {
-          onClick: {
-            enable: true,
-            mode: "repulse",
-          },
-          onHover: {
-            enable: true,
-            mode: 'grab',
-          },
+    },
+    fpsLimit: 120,
+    interactivity: {
+      events: {
+        onClick: {
+          enable: false,
+          mode: "repulse",
         },
-        modes: {
-          push: {
-            distance: 200,
-            duration: 15,
-          },
-          grab: {
-            distance: 150,
-          },
+        onHover: {
+          enable: false,
+          mode: "grab",
         },
+        resize: false,
       },
-      particles: {
-        color: {
-          value: "#FFFFFF",
+      modes: {
+        repulse: {
+          distance: 200,
         },
-        links: {
-          color: "#FFFFFF",
+        grab: {
           distance: 150,
-          enable: true,
-          opacity: 0.3,
-          width: 1,
-        },
-        move: {
-          direction: "none",
-          enable: true,
-          outModes: {
-            default: "bounce",
-          },
-          random: true,
-          speed: 1,
-          straight: false,
-        },
-        number: {
-          density: {
-            enable: true,
-          },
-          value: 150,
-        },
-        opacity: {
-          value: 1.0,
-        },
-        shape: {
-          type: "circle",
-        },
-        size: {
-          value: { min: 1, max: 3 },
         },
       },
-      detectRetina: true,
-    }),
-    [],
-  );
-
+    },
+    particles: {
+      color: {
+        value:"#489eff", // particle color
+      },
+      links: {
+        color: "#67dea8", // line color
+        distance: 150,
+        enable: true,
+        opacity: 0.3,
+        width: 1,
+      },
+      move: {
+        direction: "none",
+        enable: true,
+        outModes: {
+          default: "bounce" ,
+        },
+        random: true,
+        speed: 1,
+        straight: false,
+      },
+      number: {
+        density: {
+          enable: true,
+          area: 800,
+        },
+        value: 150,
+      },
+      opacity: {
+        value: 1.0,
+      },
+      shape: {
+        type: "circle",
+      },
+      size: {
+        value: { min: 1, max: 3 },
+      },
+    },
+    detectRetina: true,
+  }), []);
 
   return <Particles id={props.id} init={particlesLoaded} options={options} />; 
 };

@@ -48,17 +48,22 @@ function Auth() {
   };
 
   const handleLogin = async () => {
-    if(validateLogin()) {
-      const response = await apiClient.post(LOGIN_ROUTE,
-        {email, password},
-        { withCredentials: true }
-      );
+    try {
+      if(validateLogin()) {
+        const response = await apiClient.post(LOGIN_ROUTE,
+          {email, password},
+          { withCredentials: true }
+        );
 
-      if(response.data.user.id) {
-        setUserInfo(response.data.user);
-        if(response.data.user.profileSetup) navigate("/chat");
-        else navigate("/profile");
+        if(response.data.user.id) {
+          setUserInfo(response.data.user);
+          if(response.data.user.profileSetup) navigate("/chat");
+          else navigate("/profile");
+        }
       }
+    }
+    catch (error) {
+      toast(error.response.data);
     }
   };
 
