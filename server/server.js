@@ -4,6 +4,7 @@ import cors from "cors";
 import cookieParser from "cookie-parser";
 import connectDB from "./utils/db.js";
 import authRoutes from "./routes/AuthRoute.js";
+import contactRoutes from "./routes/ContactRoutes.js";
 
 dotenv.config();
 
@@ -21,10 +22,9 @@ app.use("/uploads/profiles", express.static("uploads/profiles")); // to serve st
 app.use(cookieParser())
 app.use(express.json());    // to parse incoming requests with JSON payloads
 app.use("/api/auth", authRoutes)
+app.use("/api/contacts", contactRoutes);
 
 connectDB();
-
-
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);

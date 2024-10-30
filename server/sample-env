@@ -1,0 +1,4 @@
+MONGO_URI = "YOUR_MONGODB_URI"
+PORT = 5000
+JWT_KEY = "YOUR_JWT_KEY"
+ORIGIN = "http://localhost:5173"
