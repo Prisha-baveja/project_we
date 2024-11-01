@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../../../../../../components/ui/tooltip"
 import { FaPlus } from 'react-icons/fa'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
@@ -44,13 +44,8 @@ const NewDm = () => {
     setOpenNewContactModel(false);
     setSelectedChatType("contact");
     setSelectedChatData(contact);
+    setSeachedContacts([]);
   };
-
-  useEffect(() => {
-    if(setOpenNewContactModel) {
-      setSeachedContacts([]);
-    } 
-  }, [openNewContactModel]);
 
   return (
     <>
@@ -87,7 +82,7 @@ const NewDm = () => {
                 <ScrollArea className="h-[250px] w-full">
                   <div className="flex flex-col gap-5 items-start pl-4">
                     {
-                      searchedContacts.map((contact) => (
+                      searchedContacts.map(contact => (
                         <div key = {contact._id} 
                         className="flex gap-3 items-center cursor-pointer"
                         onClick={() => selectNewContact({contact})}>

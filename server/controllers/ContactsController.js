@@ -10,10 +10,15 @@ export const searchContacts = async (request, response, next) => {
 
         const regexTerm = searchTerm.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&");
 
-        const regex = new RegExp(regexTerm, 'i');
+        const regex = new RegExp(regexTerm, "i");
+
         const contacts = await User.find({
-            $and: [{ _id : { $ne: request.userId } }],          // if id!=userId then only show     ;    contains all contacts
-            $or: [{ firstName: regex }, { lastName: regex }, { email: regex }]
+            $and: [
+                { _id : { $ne: request.userId } },
+                {
+                    $or: [{ firstName: regex }, { lastName: regex }, { email: regex }],
+                },
+            ],          // if id!=userId then only show     ;    contains all contacts
         });
 
         return response.status(200).json({contacts});
