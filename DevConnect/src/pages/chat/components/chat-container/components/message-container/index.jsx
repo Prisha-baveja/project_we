@@ -6,8 +6,23 @@ import { GET_ALL_MESSAGES_ROUTE } from "../../../../../../../utils/constants";
 
 const MessageContainer = () => {
   const scrollRef = useRef();
-  const { selectedChatType, selectedChatData, selectedChatMessages, setSelectedChatMessages } = useAppStore();
+  const { selectedChatType, selectedChatData, selectedChatMessages, setSelectedChatMessages, directMessagesContacts, setDirectMessagesContacts } = useAppStore();
   
+  // console.log(selectedChatData);
+  // console.log(directMessagesContacts);
+
+  const removeFromContactListIfNoMessages = (contactId) => {
+    const updatedContacts = directMessagesContacts.filter(contact => contact._id !== contactId);
+    setDirectMessagesContacts(updatedContacts);
+  }
+
+  const addIfNotInContactList = (contact) => {
+    const contactExists = directMessagesContacts.find(c => c._id === contact._id);
+    if(!contactExists) {
+      setDirectMessagesContacts([...directMessagesContacts, contact]);
+    }
+  }
+
   useEffect(()=> {
     const getMessages = async () => {
       try {
@@ -16,6 +31,10 @@ const MessageContainer = () => {
         {withCredentials: true});
 
         if(response.data.messages) {
+          (response.data.messages.length === 0) 
+          ? removeFromContactListIfNoMessages(selectedChatData.contact._id) 
+          : addIfNotInContactList(selectedChatData.contact);
+          
           setSelectedChatMessages(response.data.messages);
         }
       }
@@ -29,7 +48,7 @@ const MessageContainer = () => {
         getMessages();
       }
     }
-  }, [selectedChatData, selectedChatType, setSelectedChatMessages]);
+  }, [selectedChatData, selectedChatType, setSelectedChatMessages, addIfNotInContactList, removeFromContactListIfNoMessages]);
 
   useEffect(() => {
     if(scrollRef.current) {

@@ -5,13 +5,12 @@ import Message from "../models/MessagesModel.js";
 export const searchContacts = async (request, response, next) => {
     try {
         const {searchTerm} = request.body;
-
         if(searchTerm === undefined || searchTerm === null) {
             return response.status(400).send("Search Term is required");
         }
 
         const regexTerm = searchTerm.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&");
-
+        
         const regex = new RegExp(regexTerm, "i");
 
         const contacts = await User.find({

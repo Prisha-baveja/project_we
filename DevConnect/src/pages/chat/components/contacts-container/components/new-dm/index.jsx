@@ -14,7 +14,9 @@ import { HOST } from "../../../../../../../utils/constants"
 import { useAppStore } from "../../../../../../store"
 
 const NewDm = () => {
-  const { setSelectedChatType, setSelectedChatData } = useAppStore();
+  const { setSelectedChatType, setSelectedChatData, } = useAppStore();
+  
+  // console.log(directMessagesContacts);
   
   const [openNewContactModel, setOpenNewContactModel] = useState(false);
   
