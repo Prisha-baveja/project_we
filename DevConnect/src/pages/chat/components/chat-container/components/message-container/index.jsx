@@ -7,7 +7,7 @@ import { GET_ALL_MESSAGES_ROUTE } from "../../../../../../../utils/constants";
 const MessageContainer = () => {
   const scrollRef = useRef();
   const { selectedChatType, selectedChatData, selectedChatMessages, setSelectedChatMessages } = useAppStore();
-
+  
   useEffect(()=> {
     const getMessages = async () => {
       try {

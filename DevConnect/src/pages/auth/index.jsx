@@ -14,7 +14,7 @@ import { useAppStore } from '../../store';
 function Auth() {
 
   const navigate = useNavigate();
-  const { setUserInfo } = useAppStore();
+  const { setUserInfo, resetChatState } = useAppStore();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setconfirmPassword] = useState("");
@@ -56,6 +56,7 @@ function Auth() {
         );
 
         if(response.data.user.id) {
+          resetChatState();
           setUserInfo(response.data.user);
           if(response.data.user.profileSetup) navigate("/chat");
           else navigate("/profile");
@@ -75,6 +76,7 @@ function Auth() {
       );
 
       if(response.status === 201) {
+        resetChatState();
         setUserInfo(response.data.user);
         navigate("/profile");
       }
