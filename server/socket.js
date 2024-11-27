@@ -54,7 +54,7 @@ const setupSocket = ( server ) => {
             // console.log(`User connected with socket id: ${socket.id}`);
         }
         else {
-            // console.log("UserId not found in socket query");
+            console.log("UserId not found in socket query");
         }
         
         socket.on("sendMessage", sendMessage);

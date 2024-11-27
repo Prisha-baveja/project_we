@@ -20,6 +20,7 @@ app.use(cors({
 }));
 
 app.use("/uploads/profiles", express.static("uploads/profiles")); // to serve static files
+app.use("/uploads/files", express.static("uploads/files")); // to serve static files
 
 app.use(cookieParser())
 app.use(express.json());    // to parse incoming requests with JSON payloads
