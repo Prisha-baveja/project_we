@@ -7,6 +7,7 @@ import authRoutes from "./routes/AuthRoute.js";
 import contactRoutes from "./routes/ContactRoutes.js";
 import setupSocket from "./socket.js";
 import messagesRoutes from "./routes/MessagesRoutes.js";
+import channelRoutes from "./routes/ChannelRoutes.js";
 
 dotenv.config();
 
@@ -27,6 +28,7 @@ app.use(express.json());    // to parse incoming requests with JSON payloads
 app.use("/api/auth", authRoutes)
 app.use("/api/contacts", contactRoutes);
 app.use("/api/messages", messagesRoutes);
+app.use("/api/channel", channelRoutes);
 
 connectDB();
 

@@ -26,15 +26,24 @@ export const SocketProvider = ({ children }) => {
                 console.log("Socket connected");
             });
 
-            const handleReceiveMessage = async (message) => {
+            const handleReceiveMessage = (message) => {
                 const { selectedChatData, selectedChatType, addMessage } = useAppStore.getState();
 
                 if(selectedChatType !== undefined && (selectedChatData.contact._id === message.sender._id || selectedChatData.contact._id === message.recipient._id)) {
-                    await addMessage(message);
+                    addMessage(message);
+                }
+            };
+
+            const handleReceiveChannelMessage = (message) => {
+                const { selectedChatData, selectedChatType, addMessage } = useAppStore.getState();
+
+                if(selectedChatType !== undefined && selectedChatData.contact._id === message.channelId) {
+                    addMessage(message);
                 }
             };
 
             socketRef.current.on("recieveMessage", handleReceiveMessage);
+            socketRef.current.on("recieve-channel-message", handleReceiveChannelMessage);
 
             return () => {
                 socketRef.current.disconnect();

@@ -13,21 +13,29 @@ const ChatHeader = () => {
       <div className='flex gap-5 items-center w-full justify-between'>
         <div className="flex gap-3 items-center justify-center">
           <div className="w-12 h-12 relative">
-            <Avatar className="h-12 w-12 md:w-12 md:h-12 rounded-full overflow-hidden">
-              {
-                selectedChatData.contact.image
-                ? <AvatarImage src = {`${HOST}/${selectedChatData.contact.image}`} alt = "profile" className="object-cover w-full h-full bg-black rounded-full"/> 
-                : <div className={`uppercase h-12 w-12 text-lg border-[1px] flex items-center justify-center rounded-full ${getColor(
-                selectedChatData.contact.color
-                )}`}>
-                  {selectedChatData.contact.firstName 
-                  ? selectedChatData.contact.firstName.split("").shift()
-                  : selectedChatData.contact.email.split("").shift()}
+            {
+              selectedChatType === "contact" 
+              ? <Avatar className="h-12 w-12 md:w-12 md:h-12 rounded-full overflow-hidden">
+                  {
+                    selectedChatData.contact.image
+                    ? <AvatarImage src = {`${HOST}/${selectedChatData.contact.image}`} alt = "profile" className="object-cover w-full h-full bg-black rounded-full"/> 
+                    : <div className={`uppercase h-12 w-12 text-lg border-[1px] flex items-center justify-center rounded-full ${getColor(
+                    selectedChatData.contact.color
+                    )}`}>
+                      {selectedChatData.contact.firstName 
+                      ? selectedChatData.contact.firstName.split("").shift()
+                      : selectedChatData.contact.email.split("").shift()}
+                    </div>
+                  }
+                </Avatar> 
+              : <div className="bg-[#ffffff22] h-10 w-10 flex items-center justify-center rounded-full">
+                  # 
                 </div>
-              }
-            </Avatar>
+            }
+            
           </div>
           <div>
+            {selectedChatType === "channel" ? selectedChatData.contact.name : ""}
             {selectedChatType === "contact" && selectedChatData.contact.firstName 
             ? `${selectedChatData.contact.firstName} ${selectedChatData.contact.lastName}`
             : selectedChatData.contact.email}

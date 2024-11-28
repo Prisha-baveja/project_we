@@ -5,92 +5,74 @@ import { apiClient } from "../../../../../../lib/api-client";
 import { GET_ALL_MESSAGES_ROUTE, HOST } from "../../../../../../../utils/constants";
 import { MdFolderZip } from "react-icons/md";
 import { IoMdArrowRoundDown } from "react-icons/io";
-import "./index.css";
+import "./index.css"
 import { IoClose } from "react-icons/io5";
+import { Avatar, AvatarFallback, AvatarImage } from "@radix-ui/react-avatar";
+import { getColor } from "../../../../../../lib/utils";
 
 const MessageContainer = () => {
   const scrollRef = useRef();
-  const containerRef = useRef();
-  const {
-    selectedChatType,
-    selectedChatData,
-    selectedChatMessages,
-    setSelectedChatMessages,
-    directMessagesContacts,
-    setDirectMessagesContacts,
-    setFileDownloadProgress,
-    setIsDownloading,
-  } = useAppStore();
-
+  const { userInfo, selectedChatType, selectedChatData, selectedChatMessages, setSelectedChatMessages, directMessagesContacts, setDirectMessagesContacts, setFileDownloadProgress, setIsDownloading } = useAppStore();
+  
   const [showImage, setShowImage] = useState(false);
   const [imageURL, setImageURL] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [page, setPage] = useState(1);
-  const [hasMore, setHasMore] = useState(true);
+
+  // let res = useRef();
+  
+  // console.log(selectedChatData);
+  // console.log(directMessagesContacts);
 
   const removeFromContactListIfNoMessages = (contactId) => {
-    const updatedContacts = directMessagesContacts.filter((contact) => contact._id !== contactId);
+    const updatedContacts = directMessagesContacts.filter(contact => contact._id !== contactId);
     setDirectMessagesContacts(updatedContacts);
-  };
+  }
 
   const addIfNotInContactList = (contact) => {
-    const contactExists = directMessagesContacts.find((c) => c._id === contact._id);
-    if (!contactExists) {
+    const contactExists = directMessagesContacts.find(c => c._id === contact._id);
+    if(!contactExists) {
       setDirectMessagesContacts([...directMessagesContacts, contact]);
     }
-  };
+  }
 
-  const fetchMessages = async (currentPage = 1) => {
-    if (!hasMore || loading) return;
+  useEffect(()=> {
+    const getMessages = async () => {
+      try {
+        const response = await apiClient.post(GET_ALL_MESSAGES_ROUTE,
+        {id: selectedChatData.contact._id},
+        {withCredentials: true});
 
-    setLoading(true);
+        // res.current = response;
 
-    try {
-      const response = await apiClient.post(
-        GET_ALL_MESSAGES_ROUTE,
-        {
-          id: selectedChatData.contact._id,
-          page: currentPage,
-          limit: 20,
-        },
-        { withCredentials: true }
-      );
-
-      const { messages, hasMore: moreMessages } = response.data;
-
-      if (messages.length === 0 && currentPage === 1) {
-        removeFromContactListIfNoMessages(selectedChatData.contact._id);
-      } else {
-        addIfNotInContactList(selectedChatData.contact);
+        if(response.data.messages) {
+          (response.data.messages.length === 0) 
+          ? removeFromContactListIfNoMessages(selectedChatData.contact._id) 
+          : addIfNotInContactList(selectedChatData.contact);
+          
+          setSelectedChatMessages(response.data.messages);
+        }
       }
+      catch (err) {
+        console.log(err);
+      }
+    };
 
-      setSelectedChatMessages([...selectedChatMessages, ...messages]);
-      setHasMore(moreMessages);
-      setPage(currentPage);
-    } catch (err) {
-      console.log(err);
-    } finally {
-      setLoading(false);
+    if(selectedChatData.contact._id) {
+      if(selectedChatType === "contact") {
+        getMessages();
+      }
+      // if(selectedChatType === "channel") {
+      //   getMessages();
+      // }
     }
-  };
-
+  }, [selectedChatData, selectedChatType, setSelectedChatMessages, addIfNotInContactList, removeFromContactListIfNoMessages]);
+  
+  // console.log(res);
+  
   useEffect(() => {
-    if (selectedChatData.contact._id && selectedChatType === "contact") {
-      fetchMessages(1);
+    if(scrollRef.current) {
+      scrollRef.current.scrollIntoView({behaviour: "smooth"});
     }
-  }, [selectedChatData, selectedChatType]);
-
-  useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollIntoView({ behavior: "smooth" });
-    }
-  }, [selectedChatMessages]);
-
-  const handleScroll = () => {
-    if (containerRef.current.scrollTop === 0 && hasMore && !loading) {
-      fetchMessages(page + 1);
-    }
-  };
+  }, [selectedChatMessages])
 
   const renderMessages = () => {
     let lastDate = null;
@@ -105,9 +87,15 @@ const MessageContainer = () => {
               {moment(message.timestamp).format("LL")}
             </div>
           )}
-          {selectedChatType === "contact" && renderDMMessage(message)}
+          {
+            selectedChatType === "contact" && renderDMMessage(message)
+          }
+
+          {
+            selectedChatType === "channel" && renderChannelMessage(message)
+          }
         </div>
-      );
+      )
     });
   };
 
@@ -117,121 +105,200 @@ const MessageContainer = () => {
   };
 
   const downloadFile = async (url) => {
+    
     setIsDownloading(true);
     setFileDownloadProgress(0);
 
-    const response = apiClient.get(`${HOST}/${url}`, {
-      responseType: "blob",
-      onDownloadProgress: (progressEvent) => {
-        const { loaded, total } = progressEvent;
-        const percentCompleted = Math.round((loaded * 100) / total);
-        setFileDownloadProgress(percentCompleted);
+    const response = apiClient.get(`${HOST}/${url}`, 
+      { responseType: "blob",
+          onDownloadProgress: (progressEvent) => {
+          const {loaded, total} = progressEvent;
+          const percentCompeleted = Math.round((loaded * 100) / total);
+          setFileDownloadProgress(percentCompeleted);
+        }
       },
-    });
-
-    const urlBlob = window.URL.createObjectURL(new Blob([response.data]));
-    const link = document.createElement("a");
-    link.href = urlBlob;
-    link.setAttribute("download", url.split("/").pop());
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-    window.URL.revokeObjectURL(urlBlob);
+    );   // responseType: "blob" is used to download the file
+    
+    const urlBlob = window.URL.createObjectURL(new Blob([response.data]));    // Create a URL for the blob
+    const link = document.createElement("a");   // Create a link element
+    link.href = urlBlob;    // Set the href of the link
+    link.setAttribute("download", url.split("/").pop());   // Set the download attribute
+    document.body.appendChild(link);    // Append the link to the body
+    link.click();     // Click the link
+    link.remove();    // Remove the link
+    window.URL.revokeObjectURL(urlBlob);    // Revoke the object URL
     setIsDownloading(false);
     setFileDownloadProgress(0);
   };
 
   const renderDMMessage = (message) => (
-    <div
-      className={`${
-        message.sender === selectedChatData.contact._id ? "text-left" : "text-right"
-      }`}
-    >
+    <div className={`${message.sender === selectedChatData.contact._id ? "text-left" : "text-right"}`}>
       {message.messageType === "text" && (
-        <div
-          className={`${
-            message.sender !== selectedChatData.contact._id
-              ? "bg-[#8417ff]/5 text-[#ffffff]/90 border-[#8417ff]/50"
-              : "bg-[#2a2b33]/5 text-white/80 border-[#ffffff]/20"
-          } border inline-block rounded p-4 my-1 max-w-[50%] break-words`}
-          style={{ whiteSpace: "pre-wrap" }}
+        <div 
+        className={`${message.sender !== selectedChatData.contact._id 
+                  ? "bg-[#8417ff]/5 text-[#ffffff]/90 border-[#8417ff]/50" 
+                  : "bg-[#2a2b33]/5 text-white/80 border-[#ffffff]/20"} border inline-block rounded p-4 my-1 max-w-[50%] break-words}
+                  style={{whiteSpace: "pre-wrap"}`}
         >
-          {message.content}
-        </div>
-      )}
+        {message.content}
+      </div>)}
+
       {message.messageType === "file" && (
-        <div
-          className={`${
-            message.sender !== selectedChatData.contact._id
-              ? "bg-[#8417ff]/5 text-[#ffffff]/90 border-[#8417ff]/50"
-              : "bg-[#2a2b33]/5 text-white/80 border-[#ffffff]/20"
-          } border inline-block rounded p-4 my-1 max-w-[50%] break-words`}
-          style={{ whiteSpace: "pre-wrap" }}
-        >
-          {checkIfImage(message.fileUrl) ? (
-            <div
-              onClick={() => {
-                setShowImage(true);
-                setImageURL(`${message.fileUrl}`);
-              }}
-              className="cursor-pointer"
-            >
-              <img src={`${HOST}/${message.fileUrl}`} height={300} width={300} />
-            </div>
-          ) : (
-            <div className="flex items-center justify-center gap-5">
+        <div 
+          className={`${message.sender !== selectedChatData.contact._id 
+                    ? "bg-[#8417ff]/5 text-[#ffffff]/90 border-[#8417ff]/50" 
+                    : "bg-[#2a2b33]/5 text-white/80 border-[#ffffff]/20"} border inline-block rounded p-4 my-1 max-w-[50%] break-words}
+                    style={{whiteSpace: "pre-wrap"}`}
+          >
+          {checkIfImage(message.fileUrl) 
+          ? <div onClick = { () => {
+              setShowImage(true);
+              setImageURL(`${message.fileUrl}`);
+            }}
+              className="cursor-pointer">
+              <img src = {`${HOST}/${message.fileUrl}`} height={300} width={300}/>
+            </div> 
+          : <div className="flex items-center justify-center gap-5">
               <span className="text-white/18 text-3xl bg-black/20 rounded-full p-3">
-                <MdFolderZip />
+                <MdFolderZip/>
               </span>
-              <span className="hidden sm:inline">{message.fileUrl.split("/").pop()}</span>
-              <span
-                onClick={() => downloadFile(message.fileUrl)}
-                className="bg-black/20 p-3 text-2xl rounded-full hover:bg-black/50 cursor-pointer transition-all duration-300"
-              >
-                <IoMdArrowRoundDown />
+              <span className="hidden sm:inline">
+                {message.fileUrl.split("/").pop()} 
               </span>
-            </div>
-          )}
+              <span onClick={() => downloadFile(message.fileUrl)} 
+              className="bg-black/20 p-3 text-2xl rounded-full hover:bg-black/50 cursor-pointer transition-all duration-300">
+                <IoMdArrowRoundDown/>
+              </span>
+            </div>}
         </div>
       )}
-      <div className="text-xs text-gray-600">{moment(message.timestamp).format("LT")}</div>
+
+      <div className="text-xs text-gray-600">
+        {moment(message.timestamp).format("LT")}
+      </div>
     </div>
   );
 
-  return (
-    <div
-      className="flex-1 overflow-y-scroll scrollbar-hidden-track p-4 px-8 md:w-[65vw] lg:w-[70vw] xl:w-[80vw] w-full"
-      onScroll={handleScroll}
-      ref={containerRef}
-    >
-      {renderMessages()}
-      <div ref={scrollRef} />
-      {showImage && (
-        <div className="fixed z-[1000] top-0 left-0 h-[100vh] w-[100vw] flex items-center justify-center backdrop-blur-lg flex-col">
-          <div>
-            <img src={`${HOST}/${imageURL}`} className="h-[80vh] w-full bg-cover" />
-          </div>
+  const renderChannelMessage = (message) => {
+    return (
+      <div
+        className={`mt-5 ${
+          message.sender._id !== userInfo.id ? "text-left" : "text-right"
+        }`}
+      >
+        {message.messageType === "text" && (
+          <div
+            className={`${
+              message.sender._id === userInfo.id
+                ? "bg-[#8417ff]/5 text-[#ffffff]/90 border-[#8417ff]/50"
+                : "bg-[#2a2b33]/5 text-white/80 border-[#ffffff]/20"
+            } border inline-block rounded p-4 my-1 max-w-[50%] break-words`}
+            style={{ whiteSpace: "pre-wrap" }}
+          >
+            {message.content}
+          </div> 
+        )}
 
-          <div className="flex gap-5 fixed top-0 mt-5">
-            <button
-              onClick={() => downloadFile(imageURL)}
-              className="bg-black/20 p-3 text-2xl rounded-full hover:bg-black/50 cursor-pointer transition-all duration-300"
-            >
-              <IoMdArrowRoundDown />
-            </button>
-
-            <button
-              onClick={() => {
-                setShowImage(false);
-                setImageURL(null);
-              }}
-              className="bg-black/20 p-3 text-2xl rounded-full hover:bg-black/50 cursor-pointer transition-all duration-300"
-            >
-              <IoClose />
-            </button>
-          </div>
+        {message.messageType === "file" && (
+        <div 
+          className={`${message.sender._id === userInfo.id 
+                    ? "bg-[#8417ff]/5 text-[#ffffff]/90 border-[#8417ff]/50" 
+                    : "bg-[#2a2b33]/5 text-white/80 border-[#ffffff]/20"} border inline-block rounded p-4 my-1 max-w-[50%] break-words}
+                    style={{whiteSpace: "pre-wrap"}`}
+          >
+          {checkIfImage(message.fileUrl) 
+          ? <div onClick = { () => {
+              setShowImage(true);
+              setImageURL(`${message.fileUrl}`);
+            }}
+              className="cursor-pointer">
+              <img src = {`${HOST}/${message.fileUrl}`} height={300} width={300}/>
+            </div> 
+          : <div className="flex items-center justify-center gap-5">
+              <span className="text-white/18 text-3xl bg-black/20 rounded-full p-3">
+                <MdFolderZip/>
+              </span>
+              <span className="hidden sm:inline">
+                {message.fileUrl.split("/").pop()} 
+              </span>
+              <span onClick={() => downloadFile(message.fileUrl)} 
+              className="bg-black/20 p-3 text-2xl rounded-full hover:bg-black/50 cursor-pointer transition-all duration-300">
+                <IoMdArrowRoundDown/>
+              </span>
+            </div>}
         </div>
       )}
+  
+        {message.sender._id !== userInfo.id ? (
+          <div className="flex items-center justify-start gap-3">
+            <Avatar className="h-8 w-8 md:w-12 md:h-12 rounded-full overflow-hidden">
+              {message.sender.image && (
+                <AvatarImage
+                  src={`${HOST}/${message.sender.image}`}
+                  alt="profile"
+                  className="object-cover w-full h-full bg-black rounded-full"
+                />
+              )}
+  
+              <AvatarFallback
+                className={`uppercase h-8 w-8 text-lg border-[1px] flex items-center justify-center rounded-full ${getColor(
+                  message.sender.color
+                )}`}
+              >
+                {message.sender.firstName
+                  ? message.sender.firstName.charAt(0)
+                  : message.sender.email.charAt(0)}
+              </AvatarFallback>
+            </Avatar>
+            <span className="text-sm text-white/60">
+              {`${message.sender.firstName} ${message.sender.lastName}`}
+            </span>
+  
+            <span className="text-xs text-white/60">
+              {moment(message.timestamp).format("LT")}
+            </span>
+          </div>
+        ) : (
+          <div className="text-xs text-white/60 mt-1">
+            {moment(message.timestamp).format("LT")}
+          </div>
+        )}
+      </div>
+    );
+  };
+  
+
+  return (
+    <div className="flex-1 overflow-y-scroll scrollbar-hidden-track p-4 px-8 md:w-[65vw] lg:w-[70vw] xl:w-[80vw] w-full">
+      {renderMessages()}
+      <div ref={scrollRef}/>
+      {
+        showImage && <div className="fixed z-[1000] top-0 left-0 h-[100vh] w-[100vw] flex items-center justify-center backdrop-blur-lg flex-col">
+          <div>
+            <img 
+              src={`${HOST}/${imageURL}`}
+              className="h-[80vh] w-full bg-cover"
+            />
+          </div>
+          
+          <div className="flex gap-5 fixed top-0 mt-5">
+
+            <button onClick={() => downloadFile(imageURL)} 
+              className="bg-black/20 p-3 text-2xl rounded-full hover:bg-black/50 cursor-pointer transition-all duration-300">
+              <IoMdArrowRoundDown/>
+            </button>
+
+            <button onClick={() => {
+              setShowImage(false);
+              setImageURL(null);
+            }} 
+              className="bg-black/20 p-3 text-2xl rounded-full hover:bg-black/50 cursor-pointer transition-all duration-300">
+              <IoClose/>
+            </button>
+
+          </div>
+        </div>
+      }
     </div>
   );
 };
