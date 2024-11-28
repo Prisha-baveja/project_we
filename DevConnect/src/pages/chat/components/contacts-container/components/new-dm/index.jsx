@@ -21,7 +21,7 @@ const NewDm = () => {
   const [openNewContactModel, setOpenNewContactModel] = useState(false);
   
   const [searchedContacts, setSeachedContacts] = useState([]);
-  
+
   const searchContacts = async (searchTerm) => {
     try {
       if(searchTerm.length > 0) {

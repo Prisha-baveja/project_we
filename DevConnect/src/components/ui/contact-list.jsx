@@ -47,8 +47,8 @@ const ContactList = ({ contacts, isChannel = false }) => {
                   contact.color
                   )}`}>
                     {contact.firstName 
-                    ? contact.firstName.split("").shift()
-                    : contact.email.split("").shift()}
+                    ? contact.firstName[0]
+                    : contact.name[0]}
                   </div>
               )}
               </Avatar>

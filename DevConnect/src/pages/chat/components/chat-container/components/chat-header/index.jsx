@@ -23,8 +23,8 @@ const ChatHeader = () => {
                     selectedChatData.contact.color
                     )}`}>
                       {selectedChatData.contact.firstName 
-                      ? selectedChatData.contact.firstName.split("").shift()
-                      : selectedChatData.contact.email.split("").shift()}
+                      ? selectedChatData.contact.firstName[0]
+                      : selectedChatData.contact.email[0]}
                     </div>
                   }
                 </Avatar> 

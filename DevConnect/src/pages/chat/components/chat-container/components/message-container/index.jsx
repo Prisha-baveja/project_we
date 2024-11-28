@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import moment from "moment";
 import { useAppStore } from "../../../../../../store";
 import { apiClient } from "../../../../../../lib/api-client";
-import { GET_ALL_MESSAGES_ROUTE, HOST } from "../../../../../../../utils/constants";
+import { GET_ALL_MESSAGES_ROUTE, GET_CHANNEL_MESSAGES, HOST } from "../../../../../../../utils/constants";
 import { MdFolderZip } from "react-icons/md";
 import { IoMdArrowRoundDown } from "react-icons/io";
 import "./index.css"
@@ -20,16 +20,18 @@ const MessageContainer = () => {
   // let res = useRef();
   
   // console.log(selectedChatData);
-  // console.log(directMessagesContacts);
+  // console.log(selectedChatData.contact.members);
+  // directMessagesContacts.filter(contact => console)
 
   const removeFromContactListIfNoMessages = (contactId) => {
-    const updatedContacts = directMessagesContacts.filter(contact => contact._id !== contactId);
+    const updatedContacts = directMessagesContacts.filter((contact => contact._id !== contactId));
     setDirectMessagesContacts(updatedContacts);
   }
 
   const addIfNotInContactList = (contact) => {
     const contactExists = directMessagesContacts.find(c => c._id === contact._id);
-    if(!contactExists) {
+    // console.log(contact.members !== undefined);
+    if(!(contact.members !== undefined) && !contactExists) {
       setDirectMessagesContacts([...directMessagesContacts, contact]);
     }
   }
@@ -56,16 +58,36 @@ const MessageContainer = () => {
       }
     };
 
+    const getChannelMessages = async () => {
+      try {
+        const response = await apiClient.get(`${GET_CHANNEL_MESSAGES}/${selectedChatData.contact._id}`,
+        {withCredentials: true});
+
+        if(response.data.messages) {
+          (response.data.messages.length === 0) 
+          ? removeFromContactListIfNoMessages(selectedChatData.contact._id) 
+          : addIfNotInContactList(selectedChatData.contact);
+          
+          setSelectedChatMessages(response.data.messages);
+        }
+      }
+      catch (err) {
+        console.log(err);
+      }
+    };
+
     if(selectedChatData.contact._id) {
       if(selectedChatType === "contact") {
         getMessages();
       }
-      // if(selectedChatType === "channel") {
-      //   getMessages();
-      // }
+      else if(selectedChatType === "channel") {
+        getChannelMessages();
+      }
     }
   }, [selectedChatData, selectedChatType, setSelectedChatMessages, addIfNotInContactList, removeFromContactListIfNoMessages]);
   
+  // console.log(GET_CHANNEL_MESSAGES);
+  // console.log(selectedChatData.contact)
   // console.log(res);
   
   useEffect(() => {
@@ -228,7 +250,7 @@ const MessageContainer = () => {
             </div>}
         </div>
       )}
-  
+        {/* {console.log(message.sender)} */}
         {message.sender._id !== userInfo.id ? (
           <div className="flex items-center justify-start gap-3">
             <Avatar className="h-8 w-8 md:w-12 md:h-12 rounded-full overflow-hidden">
@@ -246,8 +268,8 @@ const MessageContainer = () => {
                 )}`}
               >
                 {message.sender.firstName
-                  ? message.sender.firstName.charAt(0)
-                  : message.sender.email.charAt(0)}
+                  ? message.sender.firstName[0]
+                  : message.sender.email}
               </AvatarFallback>
             </Avatar>
             <span className="text-sm text-white/60">
